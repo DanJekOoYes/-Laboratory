@@ -1,0 +1,130 @@
+#define use_CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define SIZE 50
+
+struct linkedList
+{
+	char data[SIZE];
+	struct linkedList *next;
+};
+
+void push(struct linkedList**);
+void see(struct linkedList*);
+void free_memory(struct linkedList*);
+void pop(struct linkedList**);
+void sortAcrossPointers(struct linkedList**);
+
+void(*f[])(struct linkedList**) = { push, pop, sortAcrossPointers,}; 
+void(*ff[])(struct linkedList*) = { see, free_memory};
+int main()
+{
+	struct linkedList*stack = NULL;
+	(*f[0]) (&stack); 
+	(*ff[0])(stack); // see
+	if (stack) (*f[1])(&stack); // delete
+	(*ff[0])(stack); //see
+	if (stack) (*f[2])(&stack); // Second sort
+	(*ff[0])(stack);  // see
+	(*ff[1])(stack);
+
+}
+
+void push(struct linkedList**stack)
+{ char c = 'y';
+	while(c =='y')
+	{
+	struct linkedList*stackElement = *stack;
+
+		if (!(*stack = (struct linkedList*)calloc(1, sizeof(struct linkedList))))
+		{
+			puts("Memory is not allocated");
+			return;
+		}   
+		puts("Enter data:");
+		scanf("%s",(*stack)->data );
+		(*stack)->next = stackElement; 
+		stackElement = *stack; 
+		puts("Continue? (y/n)");
+		scanf("%s", &c);
+	}
+}
+
+void see(struct linkedList*stack)
+{
+	struct linkedList*stackElement;
+	stackElement = stack;
+	if (!stack)
+	{
+		puts("\nStack is empty");
+		return;
+	}
+	puts("\nElements of the stack:");
+	do
+	{
+	    printf("%s\n", stackElement->data);
+		stackElement = stackElement->next;
+	}  while(stackElement);
+	puts("The output stack is finished!!!\n");
+}
+
+void pop(struct linkedList**stack)
+{
+	printf ("\n---------deleting element---------\n");
+	struct linkedList*stackElement;
+	stackElement = *stack;
+	*stack = (*stack)->next;
+	free(stackElement);
+	printf("Last element of the stack was deleted!!!\n");
+}
+
+void sortAcrossPointers(struct linkedList **stack)
+{	
+	printf ("\n---------sorting stack---------\n");
+	struct linkedList *sortedStack = NULL;
+	struct linkedList *min, *s3=NULL;
+	struct linkedList *s2, *s4;
+	s4 = (struct linkedList*)calloc(1, sizeof(struct linkedList));
+	s4->next = *stack;
+	for (; s4->next->next; )
+	{
+		min = s4->next;
+		for (s2 = s4->next; s2->next; s2=s2->next)
+		if (strcmp(min->data, s2->next->data) > 0)
+		{
+			min = s2->next;
+			s3 = s2;
+		}
+		if (min != s4->next)
+		{
+			s3->next = min->next;
+			min->next = s4->next;
+			s4->next = min;
+		}
+		if (!sortedStack)
+			s2 = s4;
+		s4 = s4->next;
+		if (!sortedStack)
+		{
+			free(s2);
+			sortedStack = min;
+		}
+	}
+	*stack = sortedStack;
+	puts("Sorting the stack is made!!!\n");
+}
+
+void free_memory(struct linkedList*stack)                      
+{
+	puts("\nslakfkajfhkajdhfjdshf");
+	struct linkedList*stackElement;
+	stackElement = stack;
+	do{
+
+		free(stackElement);
+		stackElement = stackElement->next;
+    
+	}  while(stackElement);
+	puts("ewhruhweued\n");
+}
