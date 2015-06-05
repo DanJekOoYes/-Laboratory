@@ -1,0 +1,19 @@
+#include "Func.cpp"
+
+int main(void)
+{
+	FILE* f;
+	int  arr_size;
+	int* arr;
+	printf("\n\n");
+	printf(" Your string: ");
+	init_main(&f,&arr_size, &arr);
+	printf(" Words lengt: ");
+	show_arr(arr,arr_size);
+	show_same_len_word_amounts(arr,arr_size);
+
+	fclose(f);
+	clean_memory(&arr);
+	printf("\n\n");
+	return 0;
+}
