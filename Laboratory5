@@ -1,0 +1,160 @@
+#include "Tree.cpp"
+#define MAX_STRING 100
+
+void clean_stdin()
+{
+	int c;
+	do
+	{
+		c = getchar();
+	} while (c != '\n' && c != EOF);
+}
+
+int EnterNumber(int LowerLimit, int UpperLimit)
+{
+	int prov, d;
+	do
+	{
+		printf("\nEnter your choise - ");
+		prov = scanf("%d", &d);
+	} while (prov != 1 || (d < LowerLimit || d > UpperLimit));
+	return d;
+}
+
+int PrintfTree()
+{
+	int choise, prov;
+	choise = 0;
+	printf("\nHow are you want see of tree?");
+	printf("\n 1. In ascending");
+	printf("\n 2. In descending");
+	printf("\n 3. The tree\n");
+	printf("\n Your choise: ");
+	prov = scanf("%d", &choise);
+	while (!choise || choise < 1 || choise > 3 || prov != 1)
+	{
+		printf("Incorrected input. Please, try again\n");
+		scanf("%d", &choise);
+	}
+	return choise;
+}
+int MenuSelect()
+{
+	int choise, prov;
+	printf("\nWhat do you want to do?");
+	printf("\n 1. Create tree");
+	printf("\n 2. Delete of the element the tree");
+	printf("\n 3. Watch the tree");
+	printf("\n 4. Read file");
+	printf("\n 5. Quit");
+	printf("\n 6. Save file\n");
+	printf("\n Your choise: ");
+	prov = scanf("%d", &choise);
+	while (!choise || choise < 1 || choise > 6 || prov != 1)
+	{
+		printf("Incorrected input. Please, try again\n");
+		scanf("%d", &choise);
+	}
+	return choise;
+}
+
+int menu()
+{
+	int DelElem, PointMenu, choise, root, number_string, flag;
+	char element;
+	root = 0;
+	STUDENT *stud;
+	number_string = 0;
+	do
+	{
+		flag = 1;
+		TREE *BinTree = NewTree();
+		do
+		{
+			PointMenu = MenuSelect();
+			switch (PointMenu)
+			{
+			case 1:
+				do
+				{
+					if (root == 0)
+					{
+						root = 1;
+						printf("");
+					}
+					else
+						printf("");
+					int Id = 1;
+					AddTree(EnterStudent(ReturnId(BinTree, Id)), BinTree);
+					printf("\nYou want continue? (y/n)");
+					printf("\n Your choise: ");
+					fflush(stdin);
+					clean_stdin();
+					scanf("%c", &element);
+				} while (element == 'y');
+				printf("\n Your Tree: \n");
+				WatchTree(BinTree, LEVEL);
+				break;
+			case 2:
+				do
+				{
+					WatchTree(BinTree, LEVEL);
+					printf("\n - ");
+					scanf("%d", &DelElem);
+					DelTree(&BinTree, DelElem);
+					WatchTree(BinTree, LEVEL);
+
+					clean_stdin();
+					printf("\nYou want continue? (y/n)");
+					printf("\n Your choise: ");
+					scanf("%c", &element);
+				} while (element == 'y');
+				break;
+			case 3:
+				choise = PrintfTree();
+				printf("\nYour tree: ");
+				if (choise == 3)
+				{
+					printf("\n");
+					WatchTree(BinTree, LEVEL);
+				}
+				else
+					PrintTree(BinTree, choise);
+				break;
+			case 4:
+				printf("\n --------FILE--------");
+				BinTree = LoadTree();
+				break;
+			case 5:
+				free_tree(BinTree);
+				free(BinTree);
+				return 0;
+			case 6:
+				printf("\n --------SAVE FILE--------\n");
+				FILE *file;
+				file = fopen("tree.txt", "w");
+				SaveTree(BinTree, file);
+				fclose(file);
+				break;
+			default:
+				printf("Incorrected input.\n");
+				clean_stdin();
+				break;
+			}
+			printf("\nYou want to do the action with the tree? (y/n)");
+			printf("\n Your choise: ");
+			fflush(stdin);
+			clean_stdin();
+			scanf("%c", &element);
+		} while (element == 'y');
+		free_tree(BinTree);
+		free(BinTree);
+		flag = 0;
+	} while (flag == 1);
+	return 0;
+}
+int main()
+{
+	menu();
+	return 0;
+}
