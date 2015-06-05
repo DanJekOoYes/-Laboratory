@@ -1,0 +1,193 @@
+#include "Student.cpp"
+
+struct TREE
+{
+	STUDENT *s;
+	TREE *left, *right;
+
+};
+TREE* NewTree()
+{
+	return NULL;
+}
+
+void SaveTree(TREE *ss, FILE *file)
+{
+	if (!ss)
+	{
+		return;
+	}
+
+	if (ss->right)
+		SaveTree(ss->right, file);
+
+	fprintf(file, "%d\n%s\n%d\n%d\n", ss->s->id, ss->s->surname, ss->s->group_number, ss->s->average_mark);
+
+	if (ss->left)
+		SaveTree(ss->left, file);
+}
+
+void WatchTree(TREE *ss, int level)
+{
+	FILE *tree;
+	if ((tree = fopen("tree.txt", "a")) == NULL)
+	{
+		printf("Error, when You are open the file.");
+		clean_stdin1();
+	}
+	if (!ss)
+	{
+		printf("The tree isn't found\n");
+		return;
+	}
+
+	if (ss->right)
+		WatchTree(ss->right, level + 1);
+
+	for (int i = 0; i < level; i++)
+	{
+		printf("   ");
+	}
+	printf("%d\n", ss->s->id);
+
+	if (ss->left)
+		WatchTree(ss->left, level + 1);
+	fclose(tree);
+}
+
+void AddTree(STUDENT *stud, TREE *&ss)
+{
+	if (!ss)
+	{
+		if ((ss = (TREE*)calloc(1, sizeof(TREE))) == NULL)
+			printf("Tree is empty\n");
+		ss->s = stud;
+		ss->left = ss->right = NULL;
+	}
+	else
+	{
+		if (strcmp(ss->s->surname, stud->surname) > 0)
+			AddTree(stud, ss->left);
+		else if (strcmp(ss->s->surname, stud->surname) < 0)
+			AddTree(stud, ss->right);
+		else
+			printf("\nThis %s string is already.\n", stud->surname);
+	}
+}
+
+bool DelTree(TREE **ss, int Id)
+{
+	if (!*ss)
+	{
+		printf("\nThis student is not found\n");
+		return false;
+	}
+	if ((*ss)->s->id != Id)
+	{
+		if((*ss)->left && DelTree(&(*ss)->left, Id))
+			return true;
+		if((*ss)->right && DelTree(&(*ss)->right, Id))
+			return true;
+	}
+	else
+	{
+		TREE *LeftSon, *RightSon;
+		LeftSon = (*ss)->left;
+		RightSon = (*ss)->right;
+		free((*ss)->s->surname);
+		free((*ss)->s);
+		free(*ss);
+		*ss = RightSon;
+		while (*ss)
+			ss = &(*ss)->left;
+		*ss = LeftSon;
+		if(LeftSon==NULL)
+			free(LeftSon);
+		if(RightSon==NULL)
+			free(RightSon);
+	}
+}
+
+void PrintTree(TREE *ss, int choise)
+{
+	FILE *tree;
+	if ((tree = fopen("tree.txt", "a")) == NULL)
+	{
+		printf("Error, when You are open the file.\n");
+		clean_stdin1();
+	}
+	if (choise == 1)
+	if (ss)
+	{
+		PrintTree(ss->left, choise);
+		printf("%d ", ss->s->id);
+		PrintTree(ss->right, choise);
+	}
+	if (choise == 2)
+	if (ss)
+	{
+		PrintTree(ss->right, choise);
+		printf("%d ", ss->s->id);
+		PrintTree(ss->left, choise);
+	}
+	fclose(tree);
+}
+
+void free_tree(TREE *ss)
+{
+	int i;
+	if (ss)
+	{
+		free_struct(ss->s);
+		free_tree(ss->left);
+		if (ss->left != NULL)
+			free(ss->left);
+		free_tree(ss->right);
+		if (ss->right != NULL)
+			free(ss->right);
+	}
+}
+
+TREE* LoadTree()
+{
+	FILE* file;
+	TREE* tree = NewTree();
+	tree = NULL;
+	STUDENT* stud;
+	file = fopen("tree.txt", "r");
+	if(file == NULL)
+	{
+		printf("Error, when You are open the file.\n");
+		clean_stdin1();
+		return 0;
+	}
+	while (!feof(file))
+	{
+		stud = MemoryStruct();
+		fscanf(file, "%d", &stud->id);
+		fscanf(file, "%s", stud->surname);
+		fscanf(file, "%d", &stud->group_number);
+		fscanf(file, "%d", &stud->average_mark);
+		printf("\n%s", stud->surname);
+		if (stud->id == 0)
+			break;
+		AddTree(stud, tree);
+	}
+	free_struct(stud);
+	fclose(file);
+	return tree;
+}
+
+int ReturnId(TREE *ss, int &Id)
+{
+	if (ss)
+	{
+		if (ss->s->id == Id)
+			Id++;
+		else
+			return Id;
+		ReturnId(ss->left, Id);
+		ReturnId(ss->right, Id);
+	}
+	return Id;
+}
