@@ -1,0 +1,532 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define LINE printf("\n--------------------------------------------------------------------------------\n");
+#define ERROR 1
+#define EXIT 0
+
+struct typeA
+{
+	char *father;
+	char *mother;
+	char *brother;
+};
+struct typeB
+{
+	char *father;
+	char *mother;
+	char *brother;
+	char *sister;
+};
+struct typeC
+{
+	char *mother;
+	char *brother;
+	char *sister;
+};
+
+struct record
+{
+	char *first_name;
+	char *last_name;
+	char *sur_name;
+	char type_of_info;
+	union var 
+	{
+		struct typeA A;
+		struct typeB B;
+		struct typeC C;
+	} other;
+};
+
+typedef struct record student;
+
+void clean_in()
+{
+	int ch = 0;
+	do{
+		ch = getchar();
+	} while (ch != '\n'&& ch != EOF);
+}
+
+void MemoryForStruct(student** stud, int amount, int length);
+void MemoryForA(student** stud, int length);
+void MemoryForB(student** stud, int length);
+void MemoryForC(student** stud, int length);
+void cleanA(struct typeA A);
+void cleanB(struct typeB B);
+void cleanC(struct typeC C);
+void clean(student *stud);
+
+void enter_A(char* user, student* stud);
+void enter_B(char* user, student* stud);
+void enter_C(char* user, student* stud);
+void enter_fields(char* user, student* stud, int length);
+void show(student* stud);
+void infostudent_show(student* stud);
+void show_A(student* stud);
+void show_B(student* stud);
+void show_C(student* stud);
+int check_str(char* str);
+
+void miss_space()
+
+{
+	char choice = ' ';
+	while (choice == ' ')
+		choice = getchar();
+}
+
+int main()
+{
+	const int USER_LEN = 10;
+	int a;
+	int length;
+	int temp;
+	student *stud;
+	char *user;
+	stud = (student *)malloc(sizeof(student));
+	if (!stud)
+	{
+		printf("Error");
+		return 1;
+	}
+	user = (char*)malloc(sizeof(char)*USER_LEN);
+	if (!user)
+	{
+		printf("Error");
+		return 1;
+	}
+
+	do
+	{
+		printf("Enter the length for names, surnames, lastname(minimum 10): ");
+		a = scanf("%d", &length);
+		clean_in();
+	} while (a<1 || length<10);
+	MemoryForStruct(&stud, 1, length);
+
+	LINE
+	printf("\t\t\tINSTRUCTION\n\n");
+	printf("The program works on the following principle:\n");
+	printf("You must enter a string consisting of digits\n");
+	printf("First digit is a point of menu (use digits 0, 1, 2, 3, 4 - exit)\n");
+	printf("Digits from 0 to 3 shoud be followed by digits 1 or 0, their amount depends on the first\n");
+	printf("1 or 0 means that you chose one from under paragraphs ( ''1'' - activation of subparagraph, ''0'' - deactivate ).\n\n");
+	printf("\t\t\t  EXAMPLE\n\n");
+	printf("1110111 - means you select first point(as first digit 1) so you add base information about student and information about father, mother, brother.\n");
+	printf("The order is same as in menu:kind of information, name, surname, last name, father,mother,brother - for our example\n");
+	printf("So 0 means that we will not enter the last name\n");
+	LINE
+
+	printf("0.Information about student (name ''1/0'', surname ''1/0'', last name ''1/0'')\n");
+	printf("1.With mother ''1/0'', father ''1/0'', brother ''1/0''\n");
+	printf("2.With mother ''1/0'', father ''1/0'', brother ''1/0'', sister ''1/0''\n");
+	printf("3.With mother ''1/0'', brother ''1/0'', sister ''1/0''\n");
+	printf("4.For exit\n");
+	printf("Yor choice: ");
+
+	do
+	{
+		fgets(user, USER_LEN, stdin);
+		temp = check_str(user);
+		if (temp == EXIT)
+		{
+			clean(stud);
+			free(stud);
+			free(user);
+			return 0;
+		}
+		if (temp == ERROR)
+		{
+			printf("Incorrect input, try more\n");
+			printf("Yor choice: ");
+			continue;
+		}
+	} while (temp == ERROR);
+	printf("\n");
+	enter_fields(user, stud, length);
+
+	for (;;)
+	{
+		LINE
+			show(stud);
+		LINE
+
+		printf("0.Information about student (name ''1/0'', surname ''1/0'', last name ''1/0'')\n");
+		printf("1.With mother ''1/0'', father ''1/0'', brother ''1/0''\n");
+		printf("2.With mother ''1/0'', father ''1/0'', brother ''1/0'', sister ''1/0''\n");
+		printf("3.With mother ''1/0'', brother ''1/0'', sister ''1/0''\n");
+		printf("4.For exit\n");
+		printf("Yor choice: ");
+
+		fgets(user, USER_LEN, stdin);
+		temp = check_str(user);
+		if (temp == ERROR)
+		{
+			printf("Incorrect input, try more\n");
+			printf("Yor choice: ");
+			continue;
+		}
+		else if (temp == EXIT)
+		{	
+			clean(stud);
+			free(user);
+			return 0;
+		}
+		printf("\n");
+		enter_fields(user, stud, length);
+	}
+	
+	clean(stud);
+	free(user);
+	return 0;
+}
+
+void MemoryForStruct(student** stud, int amount, int length)
+{
+	int i;
+	for (i = 0; i < amount; ++i)
+	{
+		stud[i]->first_name = (char*)malloc(sizeof(char)*length);
+		if (!stud[i]->first_name)
+		{
+			printf("\nMemory is not allocated\n");
+			return;
+		}
+		stud[i]->sur_name = (char*)malloc(sizeof(char)*length);
+		if (!stud[i]->sur_name)
+		{
+			printf("\nMemory is not allocated\n");
+			return;
+		}
+		stud[i]->last_name = (char*)malloc(sizeof(char)*length);
+		if (!stud[i]->last_name)
+		{
+			printf("\nMemory is not allocated\n");
+			return;
+		}
+	}
+}
+
+void MemoryForA(student** record, int length)
+{
+	record[0]->other.A.brother = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.A.brother)
+	{
+		printf("Memory is not allocated");
+	}
+	record[0]->other.A.father = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.A.father)
+	{
+		printf("Memory is not allocated");
+	}
+	record[0]->other.A.mother = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.A.mother)
+	{
+		printf("Memory is not allocated");
+	}
+}
+
+void MemoryForB(student** record, int length)
+{
+	record[0]->other.B.brother = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.B.brother)
+	{
+		printf("Memory is not allocated");
+	}
+	record[0]->other.B.father = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.B.father)
+	{
+		printf("Memory is not allocated");
+	}	
+	record[0]->other.B.mother = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.B.mother)
+	{
+		printf("Memory is not allocated");
+	}
+	record[0]->other.B.sister = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.B.sister)
+	{
+		printf("Memory is not allocated");
+	}
+}
+
+void MemoryForC(student** record, int length)
+{
+	record[0]->other.C.brother = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.C.brother)
+	{
+		printf("Memory is not allocated");
+	}
+	record[0]->other.C.sister = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.C.sister)
+	{
+		printf("Memory is not allocated");
+	}
+	record[0]->other.C.mother = (char*)malloc(sizeof(char)*length);
+	if (!record[0]->other.C.mother)
+	{
+		printf("Memory is not allocated");
+	}
+}
+
+
+void cleanA(struct typeA A)
+{
+	free(A.father);
+	free(A.mother);
+	free(A.brother);
+}
+
+void cleanB(struct typeB B)
+{
+	free(B.father);
+	free(B.mother);
+	free(B.brother);
+	free(B.sister);
+}
+
+void cleanC(struct typeC C)
+{
+	free(C.sister);
+	free(C.mother);
+	free(C.brother);
+}
+
+void clean(student *stud)
+{
+	switch (stud->type_of_info)
+	{
+		case 'A':
+			cleanA(stud->other.A);
+			break;
+		case 'B':
+			cleanB(stud->other.B);
+			break;
+		case 'C':
+			cleanC(stud->other.C);
+			break;
+	}
+	free(stud->last_name);
+	free(stud->sur_name);
+	free(stud->first_name);
+	free(stud);
+}
+
+void enter_base(char* user, student *stud)
+{
+	if (user[1] == '1')
+	{
+		printf("Enter name: ");
+		gets(stud->first_name);
+	}
+	else stud->first_name[0] = '\0';
+
+	if (user[2] == '1')
+	{
+		printf("Enter surname: ");
+		gets(stud->sur_name);
+	}
+	else stud->sur_name[0] = '\0';
+
+	if (user[3] == '1')
+	{
+		printf("Enter last name: ");
+		gets(stud->last_name);
+	}
+	else stud->last_name[0] = '\0';
+
+}
+
+void enter_A(char* user, student *stud)
+{
+	if (user[4] == '1')
+	{
+		printf("Enter father's name: ");
+		gets(stud->other.A.father);
+	}
+	else stud->other.A.father[0] = '\0';
+
+	if (user[5] == '1')
+	{
+		printf("Enter mother's name: ");
+		gets(stud->other.A.mother);
+	}
+	else stud->other.A.mother[0] = '\0';
+
+	if (user[6] == '1')
+	{
+		printf("Enter brother's name: ");
+		gets(stud->other.A.brother);
+	}
+	else stud->other.A.brother[0] = '\0';
+}
+
+void enter_B(char* user, student *stud)
+{
+	if (user[4] == '1')
+	{
+		printf("Enter father's name: ");
+		gets(stud->other.B.father);
+	}
+	else stud->other.B.father[0] = '\0';
+
+	if (user[5] == '1')
+	{
+		printf("Enter mother's name: ");
+		gets(stud->other.B.mother);
+	}
+	else stud->other.B.mother[0] = '\0';
+
+	if (user[6] == '1')
+	{
+		printf("Enter brother's name: ");
+		gets(stud->other.B.brother);
+	}
+	else stud->other.B.brother[0] = '\0';
+
+	if (user[7] == '1')
+	{
+		printf("Enter sister's name: ");
+		gets(stud->other.B.sister);
+	}
+	else stud->other.B.sister[0] = '\0';
+}
+
+void enter_C(char* user, student *stud)
+{
+	if (user[4] == '1')
+	{
+		printf("Enter mother's name: ");
+		gets(stud->other.C.mother);
+	}
+	else stud->other.C.mother[0] = '\0';
+
+	if (user[5] == '1')
+	{
+		printf("Enter brother's name: ");
+		gets(stud->other.C.brother);
+	}
+	else stud->other.C.brother[0] = '\0';
+
+	if (user[6] == '1')
+	{
+		printf("Enter sister's name: ");
+		gets(stud->other.C.sister);
+	}
+	else stud->other.C.sister[0] = '\0';
+}
+
+void enter_fields(char* user, student *stud, int length)
+{
+	enter_base(user, stud);
+	switch (user[0])
+	{
+	case '0':
+		stud[0].type_of_info = 'Q';
+		break;
+	case '1':
+		stud[0].type_of_info = 'A';
+		MemoryForA(&stud, length);
+		enter_A(user, stud);
+		break;
+	case '2':
+		stud[0].type_of_info = 'B';
+		MemoryForB(&stud, length);
+		enter_B(user, stud);
+		break;
+	case '3':
+		stud[0].type_of_info = 'C';
+		MemoryForC(&stud, length);
+		enter_C(user, stud);
+		break;
+	}
+
+}
+
+void infostudent_show(student* stud)
+{
+	printf("Name: %s\n", stud->first_name);
+	printf("Surame: %s\n", stud->sur_name);
+	printf("Last name: %s\n", stud->last_name);
+}
+
+void show_A(student* stud)
+{
+	printf("\nFather: %s\n", stud->other.A.father);
+	printf("Mother: %s\n", stud->other.A.mother);
+	printf("Brother: %s\n", stud->other.A.brother);
+}
+
+void show_B(student* stud)
+{
+	printf("\nFather: %s\n", stud->other.B.father);
+	printf("Mother: %s\n", stud->other.B.mother);
+	printf("Brother: %s\n", stud->other.B.brother);
+	printf("Sister: %s\n", stud->other.B.sister);
+}
+
+void show_C(student* stud)
+{
+	printf("\nMother: %s\n", stud->other.C.mother);
+	printf("Brother: %s\n", stud->other.C.brother);
+	printf("Sister: %s\n", stud->other.C.sister);
+}
+
+void show(student* stud)
+{
+	infostudent_show(stud);
+	switch (stud->type_of_info)
+	{
+	case 'Q':
+		break;
+	case 'A':
+		show_A(stud);
+		break;
+	case 'B':
+		show_B(stud);
+		break;
+	case 'C':
+		show_C(stud);
+		break;
+	}
+}
+
+int check_str(char* str)
+{
+	unsigned int i;
+	switch (str[0])
+	{
+	case '0':
+		if (strlen(str) != 5)
+			return ERROR;
+		break;
+	case '1':
+		if (strlen(str) != 8)
+			return ERROR;
+		break;
+	case '2':
+		if (strlen(str) != 9)
+			return ERROR;
+		break;
+	case '3':
+		if (strlen(str) != 8)
+			return ERROR;
+		break;
+	case '4':
+		return EXIT;
+		break;
+	default:
+		return ERROR;
+		break;
+	}
+
+	for (i = 1; i<strlen(str) - 1; ++i)
+	{
+		if (str[i] != '1' && str[i] != '0')
+			return ERROR;
+	}
+
+	return 2;
+}
