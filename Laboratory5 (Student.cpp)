@@ -1,0 +1,73 @@
+#include "General.h"
+#define MAXSIZE 20
+struct STUDENT
+{
+	int id;
+	char *surname;
+	int group_number;
+	int average_mark;
+};
+
+void clean_stdin1()
+{
+	int c;
+	do
+	{
+		c = getchar();
+	} while (c != '\n' && c != EOF);
+}
+
+int Check()
+{
+	int prov, element;
+	do
+	{
+		clean_stdin1();
+		prov = scanf("%d", &element);
+	} while (prov != 1 || element < 0 || !element);
+	return element;
+}
+
+STUDENT* MemoryStruct()
+{
+	STUDENT *stud;
+	stud = (STUDENT*)calloc(1, sizeof(STUDENT));
+	if (!stud)
+		return 0;
+	stud->surname = (char*)calloc(MAXSIZE, sizeof(char));
+	if (!stud->surname)
+	{
+		free(stud);			
+		return NULL;
+	}
+	return stud;
+}
+
+STUDENT* EnterStudent(int Id)
+{
+	STUDENT* stud;
+	stud = MemoryStruct();
+	FILE *tree;
+	if ((tree = fopen("tree.txt", "a")) == NULL)
+	{
+		printf("Error, when You are open the file.");
+		clean_stdin1();
+		return 0;
+	}
+	stud->id = Id;
+	printf("\nEnter surname of student - ");
+	scanf("%s", stud->surname);
+	printf("Enter number of group - ");
+	stud->group_number = Check();
+	printf("Enter of average mark - ");
+	stud->average_mark = Check();
+	fprintf(tree, "%d\n%s\n%d\n%d\n", stud->id, stud->surname, stud->group_number, stud->average_mark);
+	fclose(tree);
+	return stud;
+}
+
+void free_struct(STUDENT *stud)
+{	
+	free(stud->surname);
+	free(stud);
+}
