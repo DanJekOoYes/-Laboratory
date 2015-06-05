@@ -1,0 +1,571 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#ifdef linux
+	#define CONSOLE_CLEAR system("clear")
+#else
+	#define CONSOLE_CLEAR system("cls")
+#endif
+
+#define MIN_INT			-2147483645
+#define MAX_INT			2147483646
+#define ERROR			1
+#define SUCCESS			0
+#define MAX_SIZE		255
+#define PRESS_KEY		printf("\nPress any key to continue . . . ")
+#define CONSOLE_PAUSE   while(!getchar())
+
+typedef struct first_queue {
+	int digit1;
+	struct first_queue *next_ptr;
+} first_queue_t;
+
+typedef struct second_queue {
+	int digit2;
+	struct second_queue *next_ptr;
+} second_queue_t;
+
+typedef struct result_queue {
+	int digit3;
+	struct result_queue *next_ptr;
+} result_queue_t;
+
+/* Enqueue */
+void EnqueueFirst(int ,first_queue_t **, first_queue_t **);
+void EnqueueSecond(int , second_queue_t **, second_queue_t **);
+void EnqueueResult(int , result_queue_t **, result_queue_t **);
+
+/* Dequeue */
+int DequeueFirst(first_queue_t **, first_queue_t **);
+int DequeueSecond(second_queue_t **, second_queue_t **);
+int DequeueResult(result_queue_t **, result_queue_t **);
+
+/* Clear queue */
+int ClearFirstQueue(first_queue_t **, first_queue_t **);
+int ClearSecondQueue(second_queue_t **, second_queue_t **);
+int ClearResultQueue(result_queue_t **, result_queue_t **);
+
+/* Printf queues on display */
+void FirstQueuePrint(first_queue_t *);
+void SecondQueuePrint(second_queue_t *);
+void ResultQueuePrint(result_queue_t *);
+
+/* File input/output */
+int CheckFileOpen(FILE **);
+void FirstQueueInput(FILE **, first_queue_t **, first_queue_t **);
+void SecondQueueInput(FILE **, second_queue_t **, second_queue_t **);
+void FirstQueueFile(FILE **, first_queue_t *);
+void SecondQueueFile(FILE **, second_queue_t *);
+void ResultQueueFile(FILE **, result_queue_t *);
+
+/* Work with menu */
+void Menu(void);
+void ClearInputBuffer(void);
+void EnterDigit(int *);
+void MenuChoice(int *);
+
+/* Queue sorting functions */
+void FirstQueueSort(first_queue_t **, first_queue_t **);
+void SecondQueueSort(second_queue_t **, second_queue_t **);
+void ResultQueueSort(result_queue_t **, result_queue_t **);
+
+void ResultQueueCreate(first_queue_t **, first_queue_t **, second_queue_t **, 
+					  second_queue_t **, result_queue_t **, result_queue_t **);
+
+int main () {
+	first_queue_t *head_first, *tail_first;
+	second_queue_t *head_second, *tail_second;
+	result_queue_t *head_result, *tail_result;
+	int digit = 0;
+	int choice = 0;
+	FILE *queue1, *queue2, *output_queue;
+	head_first = tail_first = NULL;
+	head_second = tail_second = NULL;
+	head_result = tail_result = NULL;
+	Menu();
+	printf("Enter your choice: ");
+	MenuChoice(&choice);
+	while (choice != 8) {
+		switch (choice) {
+			case 1: {
+				printf("Enter digit for queue 1: ");
+				EnterDigit(&digit);
+				EnqueueFirst(digit, &head_first, &tail_first);
+				break;
+			}
+			case 2: {
+				printf("Reading from file . . .\n\n");
+				FirstQueueInput(&queue1, &head_first, &tail_first);
+				printf("\nAll data successfully readed an inserted!");
+				break;
+			}
+			case 3: {
+				printf("Enter digit for queue 2: ");
+				EnterDigit(&digit);
+				EnqueueSecond(digit, &head_second, &tail_second);
+				break;
+			}
+			case 4: {
+				printf("Reading from file . . .\n\n");
+				SecondQueueInput(&queue2, &head_second, &tail_second);
+				printf("\nAll data successfully readed an inserted!");
+				break;
+			}
+			case 5: {
+				if (head_first != NULL) {
+					digit = DequeueFirst(&head_first, &tail_first);
+					printf("%d  dequeued.\n", digit);
+					FirstQueuePrint(head_first);
+				} else {
+					printf("\nThis queue is empty !\n");
+					break;
+				}
+				break;
+			}
+			case 6: {
+				if (head_second != NULL) {
+					digit = DequeueSecond(&head_second, &tail_second);
+					printf("%d  dequeued.\n", digit);
+					SecondQueuePrint(head_second);
+				} else {
+					printf("\nThis queue is empty !\n");
+					break;
+				}
+				break;
+			}
+			case 7: {	
+				FirstQueuePrint(head_first);
+				FirstQueueFile(&queue1, head_first);
+				SecondQueuePrint(head_second);
+				SecondQueueFile(&queue2, head_second);
+				ResultQueueCreate(&head_first, &tail_first, &head_second, 
+					  &tail_second, &head_result, &tail_result);
+				ResultQueueFile(&output_queue, head_result);
+				ResultQueuePrint(head_result);
+				break;
+			}
+			default: {
+				printf("\nInvalid choice.\n");
+				break;
+			}
+		}
+		ClearResultQueue(&head_result, &tail_result);
+		CONSOLE_PAUSE;
+		CONSOLE_CLEAR;
+		Menu();
+		printf("Enter your choice: ");
+		MenuChoice(&choice);
+		ClearInputBuffer();
+	}
+	PRESS_KEY;
+	CONSOLE_PAUSE;
+	return 0;
+}
+
+void ClearInputBuffer() {
+	int ch = 0;
+	do {
+		ch = getchar();
+	} while (ch != '\n' && ch != EOF);
+}
+
+void EnqueueFirst(int digit, first_queue_t **head_first, first_queue_t **tail_first) {
+	first_queue_t *tmp;
+	tmp = (first_queue_t *)malloc(sizeof(first_queue_t));
+	if (tmp != NULL) {
+		tmp->digit1 = digit;
+		tmp->next_ptr = NULL;
+		if(*head_first == NULL) {
+			*head_first = tmp;
+		} else {
+			(*tail_first)->next_ptr = tmp;
+		}
+		*tail_first = tmp;
+		printf("%d inserted.\n", digit); 
+	} else {
+		printf("%d not inserted. No memory available.\n", digit);
+		return;
+	}
+}
+
+void EnqueueSecond(int digit, second_queue_t **head_second, second_queue_t **tail_second) {
+	second_queue_t *tmp;
+	tmp = (second_queue_t *)malloc(sizeof(second_queue_t));
+	if (tmp != NULL) {
+		tmp->digit2 = digit;
+		tmp->next_ptr = NULL;
+		if(*head_second == NULL) {
+			*head_second = tmp;
+		} else {
+			(*tail_second)->next_ptr = tmp;
+		}
+		*tail_second = tmp;
+		printf("%d inserted.\n", digit); 
+	} else {
+		printf("%d not inserted. No memory available.\n", digit);
+		return;
+	}
+}
+
+void EnqueueResult(int digit, result_queue_t **head_result, result_queue_t **tail_result) {
+	result_queue_t *tmp;
+	tmp = (result_queue_t *)malloc(sizeof(result_queue_t));
+	if (tmp != NULL) {
+		tmp->digit3 = digit;
+		tmp->next_ptr = NULL;
+		if(*head_result == NULL) {
+			*head_result = tmp;
+		} else {
+			(*tail_result)->next_ptr = tmp;
+		}
+		*tail_result = tmp;
+	} else {
+		printf("%d not inserted. No memory available.\n", digit);
+		return;
+	}
+}
+
+int DequeueFirst(first_queue_t **head_first, first_queue_t **tail_first) {
+	first_queue_t *tmp;
+	int item = 0;
+	if (*tail_first == *head_first) {
+		free(*head_first);
+		*tail_first = *head_first = NULL;
+		return SUCCESS;
+	}
+	item = (*head_first)->digit1;
+	tmp = (*head_first)->next_ptr;
+	free(*head_first);
+	*head_first = tmp;
+	return item;
+}
+
+int DequeueSecond(second_queue_t **head_second, second_queue_t **tail_second) {
+	second_queue_t *tmp;
+	int item = 0;
+	if (*head_second == *tail_second) {
+		free(*head_second);
+		*tail_second = *head_second = NULL;
+		return SUCCESS;
+	}
+	item = (*head_second)->digit2;
+	tmp = (*head_second)->next_ptr;
+	free(*head_second);
+	*head_second = tmp;
+	return item;
+}
+
+int DequeueResult(result_queue_t **head_result, result_queue_t **tail_result) {
+	result_queue_t *tmp;
+	int item = 0;
+	if (*head_result == *tail_result) {
+		free(*head_result);
+		*tail_result = *head_result = NULL;
+		return SUCCESS;
+	}
+	item = (*head_result)->digit3;
+	tmp = (*head_result)->next_ptr;
+	free(*head_result);
+	*head_result = tmp;
+	return item;
+}
+
+int ClearFirstQueue(first_queue_t **head_first, first_queue_t **tail_first) {
+	while (*head_first != *tail_first || *head_first != NULL) {
+		DequeueFirst(head_first, tail_first);
+	}
+	return SUCCESS;
+}
+
+int ClearSecondQueue(second_queue_t **head_second, second_queue_t **tail_second) {
+	while (*head_second != *tail_second || *head_second != NULL) {
+		DequeueSecond(head_second, tail_second);
+	}
+	return SUCCESS;
+}
+
+int ClearResultQueue(result_queue_t **head_result, result_queue_t **tail_result) {
+	while (*head_result != *tail_result || *head_result != NULL) {
+		DequeueResult(head_result, tail_result);
+	}
+	return SUCCESS;
+}
+
+int CheckFileOpen(FILE **source_file) {
+	if (!source_file) {
+		printf("\nThe opened file is absent in this directory.\n");
+		return ERROR;
+	} else {
+		return SUCCESS;
+	}
+}
+
+void FirstQueueInput(FILE **queue1, first_queue_t **head_first, first_queue_t **tail_first) {
+	int digit = 0;
+	*queue1 = fopen("queue1.txt", "r");
+	if (CheckFileOpen(queue1) != ERROR) {
+		while (!feof(*queue1)) {
+			fscanf(*queue1, "%d", &digit);
+			EnqueueFirst(digit, head_first, tail_first);
+		}
+		fclose(*queue1);
+	} else {
+		return;
+	}
+}
+
+void SecondQueueInput(FILE **queue2, second_queue_t **head_second, second_queue_t **tail_second) {
+	int digit = 0;
+	*queue2 = fopen("queue2.txt", "r");
+	if (CheckFileOpen(queue2) != ERROR) {
+		while (!feof(*queue2)) {
+			fscanf(*queue2, "%d", &digit);
+			EnqueueSecond(digit, head_second, tail_second);
+		}
+		fclose(*queue2);
+	} else {
+		return;
+	}
+}
+
+void FirstQueueFile(FILE **queue1, first_queue_t *head_first) {
+	if (head_first == NULL) {
+		printf("\n Queue is empty");
+		CONSOLE_PAUSE;
+		return;
+	}
+	*queue1 = fopen("queue1.txt", "w+");
+	if (CheckFileOpen(queue1) != ERROR) {
+		do {
+			fprintf(*queue1, "%d ", head_first->digit1);
+			head_first = head_first->next_ptr;
+		} while (head_first);
+		fclose(*queue1);
+	} else {
+		return;
+	}
+}
+
+void SecondQueueFile(FILE **queue2, second_queue_t *head_second) {
+	if (head_second == NULL) {
+		printf("\n Queue is empty");
+		CONSOLE_PAUSE;
+		return;
+	}
+	*queue2 = fopen("queue2.txt", "w+");
+	if (CheckFileOpen(queue2) != ERROR) {
+		do {
+			fprintf(*queue2, "%d ", head_second->digit2);
+			head_second = head_second->next_ptr;
+		} while (head_second);
+		fclose(*queue2);
+	} else {
+		return;
+	}
+}
+
+void ResultQueueFile(FILE **output_queue, result_queue_t *head_result) {
+	if (head_result == NULL) {
+		printf("\n Queue is empty");
+		CONSOLE_PAUSE;
+		return;
+	}
+	*output_queue = fopen("output_queue.txt", "w+");
+	if (CheckFileOpen(output_queue) != ERROR) {
+		do {
+			fprintf(*output_queue, "%d ", head_result->digit3);
+			head_result = head_result->next_ptr;
+		} while (head_result);
+		fclose(*output_queue);
+	} else {
+		return;
+	}
+}
+
+void FirstQueuePrint(first_queue_t *head_first) {
+	printf("\nQueue content: \n");
+	if (head_first == NULL) {
+		printf("\n Queue is empty");
+		CONSOLE_PAUSE;
+		return;
+	}
+	do {
+		printf("\n %d", head_first->digit1);
+		head_first = head_first->next_ptr;
+	} while (head_first);
+}
+
+void SecondQueuePrint(second_queue_t *head_second) {
+	printf("\nQueue content: \n");
+	if (head_second == NULL) {
+		printf("\n Queue is empty");
+		CONSOLE_PAUSE;
+		return;
+	}
+	do {
+		printf("\n%d", head_second->digit2);
+		head_second = head_second->next_ptr;
+	} while (head_second);
+}
+
+void ResultQueuePrint(result_queue_t *head_result) {
+	printf("\nQueue content: \n");
+	if (head_result == NULL) {
+		printf("\n Queue is empty");
+		CONSOLE_PAUSE;
+		return;
+	}
+	do {
+		printf("\n %d", head_result->digit3);
+		head_result = head_result->next_ptr;
+	} while (head_result);
+}
+
+void EnterDigit(int *number) {
+	for ( ; ; ) {
+		while (scanf("%d", number) != 1) {
+			printf("Input error\n");
+			while (getchar() != '\n');
+			continue;
+		}
+		if (*number <= MIN_INT || *number >= MAX_INT) {
+			printf("Input error\n");
+			continue;
+		}
+		if (getchar() != '\n') {
+			printf("Input error\n");
+			while (getchar() != '\n');
+			continue;
+		} else {
+			break;
+		}
+	}
+}
+
+void MenuChoice(int *choice) {
+	for( ; ; ) {
+		while (scanf("%d", choice) != 1) {
+			printf("Enter only digits.\nTry again: ");
+			while (getchar() != '\n');
+			continue;
+		}
+		if (*choice != 1 && *choice != 2
+			&& *choice != 3 && *choice != 4 
+			&& *choice != 5 && *choice != 6
+			&& *choice != 7 && *choice != 8) {
+			printf("Incorrect input. \nChoice on of points in menu: ");
+			while(getchar() != '\n');
+			continue;
+		} else {
+			break;
+		}
+	}
+
+}
+
+void FirstQueueSort(first_queue_t **head_first, first_queue_t **tail_first) {
+	first_queue_t *temp1 = NULL, *temp2 = NULL, *temp3 = NULL, *temp4 = NULL, *temp_head = NULL;
+	temp1 = *head_first;
+	temp4 = (first_queue_t *)malloc(sizeof(first_queue_t));
+	for ( ; temp1->next_ptr; temp1 = temp1->next_ptr) {
+		for (temp2 = temp1->next_ptr; temp2; temp3 = temp3->next_ptr, temp2 = temp2->next_ptr) {
+			if (temp2 == temp1->next_ptr) {
+				temp3 = temp1;
+			}
+			if (temp1->digit1 > temp2->digit1) {
+				temp3->next_ptr = temp2->next_ptr;
+				temp2->next_ptr = temp1;
+				temp4->next_ptr = temp2;
+				temp1 = temp2;
+			}
+		}
+		if (!temp_head) {
+			temp_head = temp1;
+			free(temp4);
+		}
+		temp4 = temp1;
+	}
+	*head_first = temp_head;
+}
+
+void SecondQueueSort(second_queue_t **head_second, second_queue_t **tail_second) {
+	second_queue_t *temp1 = NULL, *temp2 = NULL, *temp3 = NULL, *temp4 = NULL, *temp_head = NULL;
+	temp1 = *head_second;
+	temp4 = (second_queue_t *)malloc(sizeof(second_queue_t));
+	for ( ; temp1->next_ptr; temp1 = temp1->next_ptr) {
+		for (temp2 = temp1->next_ptr; temp2; temp3 = temp3->next_ptr, temp2 = temp2->next_ptr) {
+			if (temp2 == temp1->next_ptr) {
+				temp3 = temp1;
+			}
+			if (temp1->digit2 > temp2->digit2) {
+				temp3->next_ptr = temp2->next_ptr;
+				temp2->next_ptr = temp1;
+				temp4->next_ptr = temp2;
+				temp1 = temp2;
+			}
+		}
+		if (!temp_head) {
+			temp_head = temp1;
+			free(temp4);
+		}
+		temp4 = temp1;
+	}
+	*head_second = temp_head;
+}
+
+void ResultQueueSort(result_queue_t **head_result, result_queue_t **tail_result) {
+	result_queue_t *temp1 = NULL, *temp2 = NULL, *temp3 = NULL, *temp4 = NULL, *temp_head = NULL;
+	temp1 = *head_result;
+	temp4 = (result_queue_t *)malloc(sizeof(result_queue_t));
+	for ( ; temp1->next_ptr; temp1 = temp1->next_ptr) {
+		for (temp2 = temp1->next_ptr; temp2; temp3 = temp3->next_ptr, temp2 = temp2->next_ptr) {
+			if (temp2 == temp1->next_ptr) {
+				temp3 = temp1;
+			}
+			if (temp1->digit3 > temp2->digit3) {
+				temp3->next_ptr = temp2->next_ptr;
+				temp2->next_ptr = temp1;
+				temp4->next_ptr = temp2;
+				temp1 = temp2;
+			}
+		}
+		if (!temp_head) {
+			temp_head = temp1;
+			free(temp4);
+		}
+		temp4 = temp1;
+	}
+	*head_result = temp_head;
+}
+
+void Menu(void) {
+	printf("\t\tChoice one point from menu\n\n"
+			"1 to add an element to the first queue\n"
+			"2 to add all elements to the first queue from file\n"
+			"3 to add an element to the second queue\n"
+			"4 to add all elements to the second queue from file\n"
+			"5 to remove an element from the first queue\n"
+			"6 to remove an element from the second queue\n"
+			"7 to create and print result queue on screen\n"
+			"8 to end\n\n");
+}
+
+void ResultQueueCreate(first_queue_t **head_first, first_queue_t **tail_first,
+					  second_queue_t **head_second, second_queue_t **tail_second,
+					  result_queue_t **head_result, result_queue_t **tail_result) {
+	int swap = 0;
+	for ( ; (*head_first) != NULL; (*head_first)->next_ptr) {
+		swap = (*head_first)->digit1;
+		EnqueueResult(swap, head_result, tail_result);
+		DequeueFirst(head_first, tail_first);
+	}
+	for ( ; (*head_second) != NULL; (*head_second)->next_ptr) {
+		swap = (*head_second)->digit2;
+		EnqueueResult(swap, head_result, tail_result);
+		DequeueSecond(head_second, tail_second);
+	}
+	ResultQueueSort(head_result, tail_result);
+}
