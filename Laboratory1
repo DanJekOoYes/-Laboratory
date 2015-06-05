@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include <locale.h>
+#include <string.h>
+#include <malloc.h>
+#define Max_Size 256 
+
+struct Substance
+{
+	char* Name;
+	double Weight;
+	enum type { PROVODNIK, POLUPROVODNIK, ISOLATYOR } Status;
+};
+char mas[15][15] = { "Provodnik", "Polyprovodnik", "Izoltor" };
+
+int info(struct Substance *sub);
+
+void show_all(struct Substance *sub, int k);
+
+void sort_weight(struct Substance *sub, int k);
+
+void swap_sub(struct Substance *sub1, struct Substance *sub2);
+
+int main()
+{
+	setlocale(LC_ALL, "Russian");	
+
+	struct Substance *sub;
+
+	int k = 3;
+
+	sub = (struct Substance*)malloc(sizeof(struct Substance)*k);
+
+	if (sub == NULL)
+	{
+		printf ("Nope Memory");
+		return 1;
+	}
+
+	info(sub);
+
+	show_all(sub, k);
+
+	printf("\n\n\t. . . Sorting . . .\n\n");
+
+	sort_weight(sub, k);
+
+	show_all(sub, k);
+
+	printf("\n\n");
+	
+	free(sub);
+	return 0;
+}
+
+int info(struct Substance *sub)
+{
+	sub[0].Name = "Alumini";
+	sub[1].Name = "Kremnii";
+	sub[2].Name = "Azot";
+
+	sub[0].Weight = 26.92;
+	sub[1].Weight = 28.08;
+	sub[2].Weight = 14.00;
+
+	sub[0].Status = PROVODNIK;
+	sub[1].Status = POLUPROVODNIK;
+	sub[2].Status = ISOLATYOR;
+}
+
+void show_all(struct Substance *sub, int k)
+{
+	printf("Name:\t\tWeight:\t\tStatus:");
+	for (int i = 0; i < k; ++i)
+	{
+		printf("\n%s\t\t%.2lfg\t\t%s", sub[i].Name, sub[i].Weight, mas[sub[i].Status]);
+	}
+}
+
+void copy_sub(struct Substance *sub1, struct Substance *sub2)
+{
+	sub1->Name = sub2->Name;
+	sub1->Weight = sub2->Weight;
+	sub1->Status = sub2->Status;
+}
+
+void swap_sub(struct Substance *sub1, struct Substance *sub2)
+{
+	struct Substance temp;
+	copy_sub(&temp, sub1);
+	copy_sub(sub1, sub2);
+	copy_sub(sub2, &temp);
+
+}
+
+void sort_weight(struct Substance *sub, int k)
+{
+	int i, j;
+
+	for (int i = 0; i < k; ++i)
+	{
+		for (int j = 0; j < k; ++j)
+		{
+			if (sub[i].Weight > sub[j].Weight)
+			{
+				swap_sub(&sub[i], &sub[j]);
+			}
+		}
+	}
+}
